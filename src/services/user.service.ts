@@ -7,9 +7,18 @@ import bcrypt from "bcryptjs";
 import { encryptPassword } from "../utils/encryption.js";
 const customServices = {
   searchUser: async (keyword: string) => {
+    // Step 1: Fetch all active users from the database
     const user = await prisma.user.findMany({
       where: {
         is_active: true,
+        OR: [
+          { name: { contains: keyword, mode: "insensitive" } },
+          { mobile_number: { contains: keyword, mode: "insensitive" } },
+          { email_address: { contains: keyword, mode: "insensitive" } },
+          { designation: { contains: keyword, mode: "insensitive" } },
+          { target_freq_per_month: { contains: keyword, mode: "insensitive" } },
+          { user_id: { contains: keyword, mode: "insensitive" } },
+        ],
       },
       select: {
         name: true,
@@ -18,22 +27,27 @@ const customServices = {
         email_address: true,
         target_freq_per_month: true,
         user_id: true,
-         createdAt:true
+        createdAt: true,
       },
     });
+  
+    // Step 2: Initialize Fuse.js with enhanced fuzzy search configuration
     const fuse = new Fuse(user, {
-      keys: ["name", "designation", "email_address"],
-      threshold: 0.5,
-      location: 0,
-      distance: 100,
+      keys: ["name", "mobile_number", "email_address", "designation"],
+      threshold: 0.5, // Adjust threshold for fuzzy matching
       includeMatches: true,
       includeScore: true,
       useExtendedSearch: true,
     });
+  
+    // Step 3: Perform a fuzzy search on the user data
     const userSearch = fuse.search(keyword);
-    if (R.hasAtLeast(userSearch, 1)) {
-      return userSearch.at(0)?.item;
+  
+    // Step 4: Return matching results or an empty array
+    if (userSearch.length > 0) {
+      return userSearch.map((result) => result.item); // Return all matching items
     }
+  
     return [];
   },
   createV2: async (data: any) => {
