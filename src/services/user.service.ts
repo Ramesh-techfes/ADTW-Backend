@@ -5,8 +5,11 @@ import * as R from "remeda";
 import exclude from "../utils/exclude.js";
 import bcrypt from "bcryptjs";
 import { encryptPassword } from "../utils/encryption.js";
+import { Role } from '@prisma/client';
+
 const customServices = {
-  searchUser: async (keyword: string) => {
+  searchUser: async (keyword: string) => {    
+    const isRole = Object.values(Role).includes(keyword as Role);
     // Step 1: Fetch all active users from the database
     const user = await prisma.user.findMany({
       where: {
@@ -18,6 +21,15 @@ const customServices = {
           { designation: { contains: keyword, mode: "insensitive" } },
           { target_freq_per_month: { contains: keyword, mode: "insensitive" } },
           { user_id: { contains: keyword, mode: "insensitive" } },
+          ...(isRole
+            ? [
+                {
+                  roles: {
+                    equals: keyword as Role,
+                  },
+                },
+              ]
+            : []),
         ],
       },
       select: {
@@ -27,13 +39,14 @@ const customServices = {
         email_address: true,
         target_freq_per_month: true,
         user_id: true,
+        roles: true,
         createdAt: true,
       },
     });
   
     // Step 2: Initialize Fuse.js with enhanced fuzzy search configuration
     const fuse = new Fuse(user, {
-      keys: ["name", "mobile_number", "email_address", "designation"],
+      keys: ["name", "mobile_number", "email_address", "designation", "user_id", "roles"],
       threshold: 0.5, // Adjust threshold for fuzzy matching
       includeMatches: true,
       includeScore: true,
