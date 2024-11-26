@@ -27,7 +27,8 @@ const customServices = {
     });
     const questionSearch = fuse.search(keyword);
     if (R.hasAtLeast(questionSearch, 1)) {
-      return questionSearch.at(0)?.item;
+      // return questionSearch.at(0)?.item;
+      return questionSearch.map((result) => result.item); // Return all matching items
     }
     return [];
   },
