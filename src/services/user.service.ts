@@ -64,18 +64,13 @@ const customServices = {
     return [];
   },
   createV2: async (data: any) => {
-   
-
-
-  
     const userData = { ...data, password: await encryptPassword("user@123") };
     console.log(userData);
-    
-      
+          
     let item = await prisma.user.create({
       data: userData,
     });
-  console.log(item);
+    console.log(item);
   
     // Exclude password from the returned user object
     const safeItem = exclude(item, ["password"]);
