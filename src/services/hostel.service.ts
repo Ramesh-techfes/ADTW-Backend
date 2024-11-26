@@ -29,7 +29,8 @@ const customServices = {
     });
     const hostelSearch = fuse.search(keyword);
     if (R.hasAtLeast(hostelSearch, 1)) {
-      return hostelSearch.at(0)?.item;
+      // return hostelSearch.at(0)?.item;
+      return hostelSearch.map((result) => result.item); // Return all matching items
     }
     return [];
   },
